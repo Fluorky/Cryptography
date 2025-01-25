@@ -1,82 +1,67 @@
 import random
 
 def rotate_left_4_bits(byte):
-    """
-    Rotate the bits of the byte to the left by 4 positions.
-    """
     return ((byte << 4) | (byte >> 4)) & 0xFF
 
 def encrypt_block_ecb(block, key):
-    """
-    Encrypt a single block using the ECB mode:
-    1. XOR the plaintext block with the key.
-    2. Rotate the result left by 4 bits.
-    """
     step1 = block ^ key
-    encrypted = rotate_left_4_bits(step1)
-    return encrypted
+    return rotate_left_4_bits(step1)
 
 def ecb_mode_encrypt(plaintext, key):
-    """
-    Encrypt plaintext using ECB mode.
-    """
-    ciphertext = []
-    for char in plaintext:
-        ciphertext.append(encrypt_block_ecb(ord(char), key))
+    ciphertext = [encrypt_block_ecb(ord(char), key) for char in plaintext]
     return ciphertext
 
 def encrypt_block_cbc(block, key, iv):
-    """
-    Encrypt a single block using the CBC mode:
-    1. XOR the plaintext block with the IV.
-    2. XOR the result with the key.
-    3. Rotate the result left by 4 bits.
-    """
     step1 = block ^ iv
     step2 = step1 ^ key
-    encrypted = rotate_left_4_bits(step2)
-    return encrypted
+    return rotate_left_4_bits(step2)
 
 def cbc_mode_encrypt(plaintext, key, iv):
-    """
-    Encrypt plaintext using CBC mode.
-    """
     ciphertext = []
     prev_block = iv
     for char in plaintext:
         encrypted = encrypt_block_cbc(ord(char), key, prev_block)
         ciphertext.append(encrypted)
-        prev_block = encrypted  # The ciphertext of the current block becomes IV for the next
+        prev_block = encrypted
     return ciphertext
 
 def format_as_hex(ciphertext):
-    """
-    Format ciphertext as a sequence of 2-digit hexadecimal numbers.
-    """
     return " ".join(f"{byte:02X}" for byte in ciphertext)
+
+def analyze_ecb_same_plaintext(plaintext, key1, key2):
+    ciphertext1 = ecb_mode_encrypt(plaintext, key1)
+    ciphertext2 = ecb_mode_encrypt(plaintext, key2)
+    return ciphertext1 == ciphertext2
+
+def analyze_cbc_same_plaintext(plaintext, key1, iv1, key2, iv2):
+    ciphertext1 = cbc_mode_encrypt(plaintext, key1, iv1)
+    ciphertext2 = cbc_mode_encrypt(plaintext, key2, iv2)
+    return ciphertext1 == ciphertext2
 
 # Given plaintext
 plaintext = "attack at down"
 
-# ECB encryption with two different keys
-key1, key2 = random.randint(0, 255), random.randint(0, 255)
-ciphertext_ecb1 = ecb_mode_encrypt(plaintext, key1)
-ciphertext_ecb2 = ecb_mode_encrypt(plaintext, key2)
-
-# CBC encryption with two different keys and IVs
+# Keys and IVs
 key1, key2 = random.randint(0, 255), random.randint(0, 255)
 iv1, iv2 = random.randint(0, 255), random.randint(0, 255)
+
+# Encrypt in ECB and CBC modes
+ciphertext_ecb1 = ecb_mode_encrypt(plaintext, key1)
+ciphertext_ecb2 = ecb_mode_encrypt(plaintext, key2)
 ciphertext_cbc1 = cbc_mode_encrypt(plaintext, key1, iv1)
 ciphertext_cbc2 = cbc_mode_encrypt(plaintext, key2, iv2)
 
+# Analyze results
+ecb_identical = analyze_ecb_same_plaintext(plaintext, key1, key2)
+cbc_identical = analyze_cbc_same_plaintext(plaintext, key1, iv1, key2, iv2)
+
 # Print results
 print("Plaintext:", plaintext)
-print("Key 1:", key1)
-print("Key 2:", key2)
-print("IV 1:", iv1)
-print("IV 2:", iv2)
-
+print("Key1:", key1, "Key2:", key2)
+print("IV1:", iv1, "IV2:", iv2)
 print("ECB Ciphertext with Key 1:", format_as_hex(ciphertext_ecb1))
 print("ECB Ciphertext with Key 2:", format_as_hex(ciphertext_ecb2))
 print("CBC Ciphertext with Key 1 and IV 1:", format_as_hex(ciphertext_cbc1))
 print("CBC Ciphertext with Key 2 and IV 2:", format_as_hex(ciphertext_cbc2))
+print(f"Are ECB ciphertexts identical? {'Yes' if ecb_identical else 'No'}")
+print(f"Are CBC ciphertexts identical? {'Yes' if cbc_identical else 'No'}")
