@@ -1,7 +1,7 @@
 import random
 from math import gcd
 
-# Function for Miller-Rabin primality test
+# Miller-Rabin Primality Test
 def is_probable_prime(n, k=5):
     if n <= 1:
         return False
@@ -31,18 +31,19 @@ def is_probable_prime(n, k=5):
 # a) Check if p and q are prime
 p = 2903
 q = 4091
+
 print(f"Is p={p} probably prime? {is_probable_prime(p)}")
 print(f"Is q={q} probably prime? {is_probable_prime(q)}")
 
-# b) Compute n and d
+# b) Compute n, Euler's totient function phi(n), and private exponent d
 n = p * q
 phi = (p - 1) * (q - 1)
 e = 4097
 
 if gcd(e, phi) != 1:
-    raise ValueError("e and phi are not coprime.")
+    raise ValueError("e and phi(n) are not coprime.")
 
-# Extended Euclidean Algorithm
+# Extended Euclidean Algorithm to find modular inverse of e modulo phi(n)
 def extended_gcd(a, b):
     if a == 0:
         return b, 0, 1
@@ -52,27 +53,27 @@ def extended_gcd(a, b):
     return g, x, y
 
 _, d, _ = extended_gcd(e, phi)
-d = d % phi
-if d < 0:
-    d += phi
+d = d % phi if d > 0 else d + phi  # Ensure d is positive
 
-print(f"Computed d={d}")
+print(f"Computed private exponent d={d}")
 
 # c) Encrypt the message "Att"
 message = "Att"
-m = ord('A') * 256**2 + ord('t') * 256 + ord('t')
-c = pow(m, e, n)
-print(f"Message {message} encrypted as: c={c}")
+m = ord('A') * 256**2 + ord('t') * 256 + ord('t')  # Convert to integer
+c = pow(m, e, n)  # Encrypt
+
+print(f"Message '{message}' encrypted as: c={c}")
 
 # d) Decrypt the message
-decrypted_m = pow(c, d, n)
+decrypted_m = pow(c, d, n)  # Decrypt
 z1 = decrypted_m // 256**2
 z2 = (decrypted_m % 256**2) // 256
 z3 = decrypted_m % 256
-decrypted_message = chr(z1) + chr(z2) + chr(z3)
+decrypted_message = chr(z1) + chr(z2) + chr(z3)  # Convert back to string
+
 print(f"Decrypted message: {decrypted_message}")
 
-# e) Factorize n using Pollard's rho algorithm
+# e) Factorize n using Pollard's Rho algorithm
 def pollards_rho(n):
     def f(x):
         return (x**2 + 1) % n
@@ -83,11 +84,15 @@ def pollards_rho(n):
         y = f(f(y))
         d = gcd(abs(x - y), n)
     if d == n:
-        return None
+        return None  # Factorization failed
     return d
 
-factor = pollards_rho(11876173)
+# Given n in the task
+n_to_factor = 11876173
+factor = pollards_rho(n_to_factor)
+
 if factor:
-    print(f"Found factor: {factor}, other factor: {11876173 // factor}")
+    print(f"Found factor: {factor}, other factor: {n_to_factor // factor}")
 else:
-    print("Failed to find a factor using Pollard's rho.")
+    print("Failed to find a factor using Pollard's Rho.")
+
