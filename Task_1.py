@@ -72,13 +72,15 @@ def pollards_rho(n: int) -> Optional[int]:
     return None if d == n else d
 
 # a) Check if p and q are prime
+print("=== (a) Checking primality of p and q ===")
 p: int = 2903
 q: int = 4091
 
 print(f"Is p={p} probably prime? {is_probable_prime(p)}")
 print(f"Is q={q} probably prime? {is_probable_prime(q)}")
 
-# b) Compute n, Euler's totient function phi(n), and private exponent d
+# b) Compute n, phi(n), and private exponent d
+print("\n=== (b) Computing n, phi(n), and d ===")
 n: int = p * q
 phi: int = (p - 1) * (q - 1)
 e: int = 4097
@@ -90,25 +92,30 @@ if gcd(e, phi) != 1:
 _, d, _ = extended_gcd(e, phi)
 d = d % phi if d > 0 else d + phi  # Ensure d is positive
 
-print(f"Computed private exponent d={d}")
+print(f"Computed values:\n n = {n}\n phi(n) = {phi}\n d = {d}")
 
 # c) Encrypt the message "Att"
+print("\n=== (c) Encrypting message 'Att' ===")
 message: str = "Att"
 m: int = ord('A') * 256**2 + ord('t') * 256 + ord('t')  # Convert to integer
 c: int = pow(m, e, n)  # Encrypt
 
-print(f"Message '{message}' encrypted as: c={c}")
+print(f"Message '{message}' converted to integer: m = {m}")
+print(f"Encrypted message: c = {c}")
 
 # d) Decrypt the message
+print("\n=== (d) Decrypting message ===")
 decrypted_m: int = pow(c, d, n)  # Decrypt
 z1: int = decrypted_m // 256**2
 z2: int = (decrypted_m % 256**2) // 256
 z3: int = decrypted_m % 256
 decrypted_message: str = chr(z1) + chr(z2) + chr(z3)  # Convert back to string
 
+print(f"Decrypted integer: {decrypted_m}")
 print(f"Decrypted message: {decrypted_message}")
 
 # e) Factorize n using Pollard's Rho algorithm
+print("\n=== (e) Factorizing n using Pollard's Rho ===")
 n_to_factor: int = 11876173
 factor: Optional[int] = pollards_rho(n_to_factor)
 
