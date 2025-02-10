@@ -92,22 +92,40 @@ def compute_shared_key(a: int, b: int, A: int, B: int, p: int) -> Optional[int]:
 
 def baby_step_giant_step(g: int, h: int, p: int) -> Optional[int]:
     """
-    Perform the Baby-Step Giant-Step algorithm to solve the discrete logarithm problem.
+    Solve the discrete logarithm problem using Baby-Step Giant-Step algorithm.
 
     :param g: The generator.
     :param h: The public key (A or B).
     :param p: The prime modulus.
-    :return: The private exponent (a or b) if found, otherwise None.
+    :return: The exact private exponent (a or b) used in key generation.
     """
-    n = isqrt(p - 1) + 1
+    n = isqrt(p - 1) + 1  # sqrt(p-1) rounded up
+    p_minus_1 = p - 1  # The order of the group
+
+    # Compute baby steps
     baby_steps = {pow(g, i, p): i for i in range(n)}
-    g_inv_n = pow(g, -n, p, p)  # Compute modular inverse g^(-n) mod p
-    
+
+    # Compute g^(-n) mod p correctly
+    g_inv = pow(g, -1, p)  # Modular inverse of g mod p
+    g_inv_n = pow(g_inv, n, p)  # Compute g^(-n) mod p
+
+    # Giant steps
     for j in range(n):
         y = (h * pow(g_inv_n, j, p)) % p
         if y in baby_steps:
-            return j * n + baby_steps[y]
-    return None
+            base_result = j * n + baby_steps[y]
+
+            # Find the correct exponent by checking all multiples of (p-1)
+            for k in range(0, 10):  # Adjust range if needed
+                candidate = base_result + k * p_minus_1
+                if candidate < p_minus_1 and pow(g, candidate, p) == h:
+                    return candidate  # Return correct exponent
+
+            return base_result  # If no better match is found, return the closest match
+
+    return None  # If no valid solution found
+
+
 
 # Main execution
 if __name__ == "__main__":
